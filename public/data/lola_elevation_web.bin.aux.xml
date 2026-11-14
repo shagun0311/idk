@@ -1,0 +1,21 @@
+<PAMDataset>
+  <Metadata>
+    <MDI key="AREA_OR_POINT">Area</MDI>
+    <MDI key="TIFFTAG_RESOLUTIONUNIT">3 (pixels/cm)</MDI>
+    <MDI key="TIFFTAG_XRESOLUTION">0.39370701</MDI>
+    <MDI key="TIFFTAG_YRESOLUTION">0.39370701</MDI>
+  </Metadata>
+  <Metadata domain="ENVI">
+    <MDI key="samples">1900</MDI>
+    <MDI key="lines">1900</MDI>
+    <MDI key="bands">1</MDI>
+    <MDI key="header_offset">0</MDI>
+    <MDI key="file_type">ENVI Standard</MDI>
+    <MDI key="data_type">4</MDI>
+    <MDI key="interleave">bsq</MDI>
+    <MDI key="byte_order">0</MDI>
+  </Metadata>
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">BAND</MDI>
+  </Metadata>
+</PAMDataset>

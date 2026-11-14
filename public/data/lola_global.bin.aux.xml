@@ -1,0 +1,38 @@
+<PAMDataset>
+  <Metadata>
+    <MDI key="BANDWIDTH"></MDI>
+    <MDI key="CENTER_FILTER_WAVELENGTH"></MDI>
+    <MDI key="DATA_SET_ID">"LRO-L-LOLA-4-GDR-V1.0"</MDI>
+    <MDI key="FILTER_NAME"></MDI>
+    <MDI key="INSTRUMENT_ID">"LOLA"</MDI>
+    <MDI key="INSTRUMENT_NAME">"LUNAR ORBITER LASER ALTIMETER"</MDI>
+    <MDI key="MISSION_NAME"></MDI>
+    <MDI key="NOTE"></MDI>
+    <MDI key="PRODUCER_INSTITUTION_NAME">"GODDARD SPACE FLIGHT CENTER"</MDI>
+    <MDI key="PRODUCT_CREATION_TIME">2019-03-15</MDI>
+    <MDI key="PRODUCT_ID">"LDEM_16"</MDI>
+    <MDI key="PRODUCT_TYPE"></MDI>
+    <MDI key="SPACECRAFT_NAME"></MDI>
+    <MDI key="START_TIME">2009-07-13T17:33:17</MDI>
+    <MDI key="STOP_TIME">2016-11-29T05:48:19</MDI>
+    <MDI key="TARGET_NAME">MOON</MDI>
+  </Metadata>
+  <Metadata domain="ENVI">
+    <MDI key="samples">5760</MDI>
+    <MDI key="lines">2880</MDI>
+    <MDI key="bands">1</MDI>
+    <MDI key="header_offset">0</MDI>
+    <MDI key="file_type">ENVI Standard</MDI>
+    <MDI key="data_type">2</MDI>
+    <MDI key="interleave">bsq</MDI>
+    <MDI key="byte_order">0</MDI>
+  </Metadata>
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">BAND</MDI>
+  </Metadata>
+  <PAMRasterBand band="1">
+    <NoDataValue>-3.27680000000000E+04</NoDataValue>
+    <Offset>1737400</Offset>
+    <Scale>0.5</Scale>
+  </PAMRasterBand>
+</PAMDataset>
