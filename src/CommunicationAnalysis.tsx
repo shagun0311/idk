@@ -2,299 +2,211 @@
 import { useMemo, useState } from 'react';
 import './CommunicationAnalysis.css';
 
-const MOON_RADIUS = 1737.4;
-const EARTH_MOON_DISTANCE = 384400;
-const SPEED_OF_LIGHT = 299792.458;
-const EARTH_ANGULAR_RADIUS = 0.95;
-
-type Band = 'S-band' | 'X-band' | 'Ka-band';
-
 export default function CommunicationAnalysis() {
   const [latitude, setLatitude] = useState(-85);
-  const [longitude, setLongitude] = useState(0);
-  const [altitude, setAltitude] = useState(0);
-  const [band, setBand] = useState<Band>('X-band');
+  const [altitude, setAltitude] = useState(2);
+  const [frequency, setFrequency] = useState(2.2);
+  const [transmitterPower, setTransmitterPower] = useState(20);
+  const [antennaGain, setAntennaGain] = useState(10);
 
-  const result = useMemo(() => {
-    // Approximate sub-Earth point on the Moon.
-    // This simplified model assumes latitude 0, longitude 0.
-    const lat1 = latitude * Math.PI / 180;
-    const lon1 = longitude * Math.PI / 180;
+  const analysis = useMemo(() => {
+    const moonRadius = 1737.4;
+    const height = Math.max(0, altitude);
+    const horizonDistance = Math.sqrt(
+      Math.pow(moonRadius + height, 2) - Math.pow(moonRadius, 2)
+    );
 
-    const cosAngle =
-      Math.cos(lat1) * Math.cos(lon1);
+    const distanceKm = horizonDistance / 1000;
+    const distanceMeters = Math.max(1000, horizonDistance);
 
-    const angularDistance =
-      Math.acos(Math.max(-1, Math.min(1, cosAngle)));
+    const wavelength = 299792458 / (frequency * 1e9);
+    const fspl =
+      20 * Math.log10(distanceMeters) +
+      20 * Math.log10(frequency * 1e9) -
+      147.55;
 
-    const earthElevation =
-      90 - angularDistance * 180 / Math.PI;
+    const receivedPower =
+      10 * Math.log10(Math.max(0.001, transmitterPower)) +
+      antennaGain -
+      fspl;
 
-    const earthVisible =
-      earthElevation >= -EARTH_ANGULAR_RADIUS;
-
-    const distance =
-      EARTH_MOON_DISTANCE + altitude;
-
-    const oneWayDelay =
-      distance / SPEED_OF_LIGHT;
-
-    const roundTripDelay =
-      oneWayDelay * 2;
+    const visibility =
+      Math.abs(latitude) >= 80
+        ? 'Polar region'
+        : 'Non-polar region';
 
     return {
-      earthVisible,
-      earthElevation,
-      distance,
-      oneWayDelay,
-      roundTripDelay,
+      distanceKm,
+      wavelength,
+      fspl,
+      receivedPower,
+      visibility,
     };
-  }, [latitude, longitude, altitude]);
+  }, [latitude, altitude, frequency, transmitterPower, antennaGain]);
 
-  const formatDelay = (seconds: number) =>
-    `${seconds.toFixed(2)} seconds`;
+  const status =
+    analysis.receivedPower > -100
+      ? 'Potentially strong'
+      : analysis.receivedPower > -120
+      ? 'Moderate'
+      : 'Weak';
 
   return (
     <div className="communication-page">
       <div className="communication-header">
         <div>
-          <span className="communication-eyebrow">
-            IDK / MISSION SYSTEMS
-          </span>
-          <h1>Communication & Radio Analysis</h1>
+          <div className="communication-eyebrow">
+            MISSION INFRASTRUCTURE
+          </div>
+          <h1>Communication Analysis</h1>
           <p>
-            Evaluate the estimated radio communication geometry
-            between a lunar spacecraft and Earth.
+            Estimate lunar surface-to-relay radio link conditions
+            for mission planning.
           </p>
         </div>
-        <div className="communication-icon">⌁</div>
+        <div className="communication-status">
+          <span className="status-dot" />
+          SIMULATION
+        </div>
       </div>
 
       <div className="communication-grid">
-        <section className="comm-card comm-inputs">
-          <div className="comm-card-heading">
-            <span>01 / MISSION PARAMETERS</span>
-            <span className="comm-dot" />
-          </div>
-
-          <label>
-            Landing site latitude
-            <div className="comm-input-row">
-              <input
-                type="number"
-                min="-90"
-                max="90"
-                step="0.1"
-                value={latitude}
-                onChange={(e) =>
-                  setLatitude(Math.max(-90, Math.min(90, Number(e.target.value))))
-                }
-              />
-              <span>°</span>
-            </div>
-          </label>
-
-          <label>
-            Landing site longitude
-            <div className="comm-input-row">
-              <input
-                type="number"
-                min="-180"
-                max="180"
-                step="0.1"
-                value={longitude}
-                onChange={(e) =>
-                  setLongitude(Math.max(-180, Math.min(180, Number(e.target.value))))
-                }
-              />
-              <span>°</span>
-            </div>
-          </label>
-
-          <label>
-            Spacecraft altitude
-            <div className="comm-input-row">
-              <input
-                type="number"
-                min="0"
-                max="1000"
-                step="0.1"
-                value={altitude}
-                onChange={(e) =>
-                  setAltitude(Math.max(0, Math.min(1000, Number(e.target.value))))
-                }
-              />
-              <span>km</span>
-            </div>
-          </label>
-
-          <label>
-            Radio frequency band
-            <select
-              value={band}
-              onChange={(e) => setBand(e.target.value as Band)}
-            >
-              <option value="S-band">S-band</option>
-              <option value="X-band">X-band</option>
-              <option value="Ka-band">Ka-band</option>
-            </select>
-          </label>
-
-          <p className="comm-hint">
-            Coordinates are entered in lunar latitude and longitude.
-            The Earth-visibility model is an approximation.
+        <section className="communication-panel">
+          <h2>Mission Parameters</h2>
+          <p className="panel-description">
+            Adjust the values to explore communication scenarios.
           </p>
+
+          <label>
+            Landing latitude
+            <span>{latitude.toFixed(1)}°</span>
+          </label>
+          <input
+            type="range"
+            min="-90"
+            max="90"
+            value={latitude}
+            onChange={(e) => setLatitude(Number(e.target.value))}
+          />
+
+          <label>
+            Spacecraft antenna height
+            <span>{altitude.toFixed(1)} km</span>
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="20"
+            step="0.1"
+            value={altitude}
+            onChange={(e) => setAltitude(Number(e.target.value))}
+          />
+
+          <label>
+            Radio frequency
+            <span>{frequency.toFixed(2)} GHz</span>
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="20"
+            step="0.1"
+            value={frequency}
+            onChange={(e) => setFrequency(Number(e.target.value))}
+          />
+
+          <label>
+            Transmitter power
+            <span>{transmitterPower} W</span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            value={transmitterPower}
+            onChange={(e) =>
+              setTransmitterPower(Number(e.target.value))
+            }
+          />
+
+          <label>
+            Antenna gain
+            <span>{antennaGain} dBi</span>
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="30"
+            value={antennaGain}
+            onChange={(e) =>
+              setAntennaGain(Number(e.target.value))
+            }
+          />
         </section>
 
-        <section className="comm-card comm-status">
-          <div className="comm-card-heading">
-            <span>02 / DIRECT EARTH LINK</span>
-            <span className="comm-live-dot" />
+        <section className="communication-panel">
+          <h2>Link Analysis</h2>
+          <p className="panel-description">
+            Calculated estimates based on your selected parameters.
+          </p>
+
+          <div className="communication-metric">
+            <span>Geometric horizon distance</span>
+            <strong>{analysis.distanceKm.toFixed(2)} km</strong>
           </div>
 
-          <div className="comm-status-visual">
-            <div className="comm-orbit">
-              <div className="comm-earth">🌍</div>
-              <div className="comm-signal-line">
-                <span />
-              </div>
-              <div className="comm-moon">🌕</div>
-            </div>
+          <div className="communication-metric">
+            <span>Signal wavelength</span>
+            <strong>{(analysis.wavelength * 100).toFixed(2)} cm</strong>
           </div>
 
-          <div className="comm-status-result">
-            <span>GEOMETRIC VISIBILITY</span>
-            <strong className={result.earthVisible ? 'comm-good' : 'comm-bad'}>
-              {result.earthVisible
-                ? 'EARTH VISIBLE'
-                : 'EARTH BELOW HORIZON'}
-            </strong>
+          <div className="communication-metric">
+            <span>Free-space path loss</span>
+            <strong>{analysis.fspl.toFixed(2)} dB</strong>
+          </div>
+
+          <div className="communication-metric">
+            <span>Estimated received power</span>
+            <strong>{analysis.receivedPower.toFixed(2)} dBm</strong>
+          </div>
+
+          <div className="communication-metric">
+            <span>Region classification</span>
+            <strong>{analysis.visibility}</strong>
+          </div>
+
+          <div className="communication-result">
+            <span>SIMULATED LINK INDICATOR</span>
+            <strong>{status}</strong>
             <p>
-              {result.earthVisible
-                ? 'A direct geometric line of sight to Earth is estimated.'
-                : 'The lunar surface obstructs the direct path to Earth in this simplified model.'}
+              This is a simplified free-space link estimate,
+              not a verified operational communication link.
             </p>
-          </div>
-
-          <div className="comm-stat-row">
-            <div>
-              <span>Earth elevation</span>
-              <strong>{result.earthElevation.toFixed(2)}°</strong>
-            </div>
-            <div>
-              <span>Selected band</span>
-              <strong>{band}</strong>
-            </div>
           </div>
         </section>
       </div>
 
-      <section className="comm-card comm-delay">
-        <div className="comm-card-heading">
-          <span>03 / SIGNAL PROPAGATION</span>
-          <span>RADIO WAVES</span>
-        </div>
-
-        <div className="comm-delay-grid">
-          <div>
-            <span>Estimated distance</span>
-            <strong>
-              {result.distance.toLocaleString('en-US', {
-                maximumFractionDigits: 1,
-              })} km
-            </strong>
-          </div>
-          <div>
-            <span>One-way signal delay</span>
-            <strong>{formatDelay(result.oneWayDelay)}</strong>
-          </div>
-          <div>
-            <span>Round-trip delay</span>
-            <strong>{formatDelay(result.roundTripDelay)}</strong>
-          </div>
-        </div>
-
-        <p className="comm-hint">
-          Delay is calculated using the speed of light and an approximate
-          Earth–Moon distance. Actual delay changes with orbital geometry.
-        </p>
-      </section>
-
-      <section className="comm-card comm-relay">
-        <div className="comm-card-heading">
-          <span>04 / RELAY NETWORK</span>
-          <span>MISSION DEPENDENT</span>
-        </div>
-
-        <div className="comm-relay-flow">
-          <div className="comm-node">
-            <span>🚀</span>
-            <strong>LANDER</strong>
-            <small>Surface spacecraft</small>
-          </div>
-
-          <div className="comm-connector">
-            <span>Radio link</span>
-            <div />
-          </div>
-
-          <div className="comm-node comm-node-relay">
-            <span>🛰️</span>
-            <strong>RELAY</strong>
-            <small>Orbital satellite</small>
-          </div>
-
-          <div className="comm-connector">
-            <span>Radio link</span>
-            <div />
-          </div>
-
-          <div className="comm-node">
-            <span>🌍</span>
-            <strong>EARTH</strong>
-            <small>Mission control</small>
-          </div>
-        </div>
-
-        <div className="comm-relay-status">
-          <span>RELAY AVAILABILITY</span>
-          <strong>REQUIRES ORBIT DATA</strong>
-          <p>
-            Relay coverage cannot be confirmed without a specific
-            relay spacecraft, orbit and mission time.
-          </p>
-        </div>
-      </section>
-
-      <section className="comm-card comm-notes">
-        <div className="comm-card-heading">
-          <span>05 / ENGINEERING NOTES</span>
-        </div>
-
+      <section className="communication-panel communication-notes">
+        <h2>Mission Communication Notes</h2>
         <ul>
           <li>
-            <strong>S-band:</strong> Commonly used for spacecraft
-            telemetry, tracking and command.
+            Lunar surface communication may require an orbiting
+            relay spacecraft when Earth is below the local horizon.
           </li>
           <li>
-            <strong>X-band:</strong> Used for deep-space communications
-            and science data.
+            Terrain, antenna orientation, relay orbit and
+            atmospheric or hardware losses can affect the link.
           </li>
           <li>
-            <strong>Ka-band:</strong> Supports high-data-rate
-            communication, with greater sensitivity to pointing
-            and atmospheric effects.
+            Actual link validation requires relay position,
+            antenna patterns, receiver sensitivity and link margins.
           </li>
         </ul>
-
-        <p className="comm-disclaimer">
-          This module estimates visibility and propagation delay.
-          It does not calculate actual signal strength, link margin,
-          data rate or radio hardware compatibility. Those require
-          transmitter power, antenna gains, receiver sensitivity,
-          pointing data and mission-specific information.
-        </p>
       </section>
+
+      <div className="communication-disclaimer">
+        SIMULATION ONLY · NOT FLIGHT-VALIDATED COMMUNICATION DATA
+      </div>
     </div>
   );
 }
