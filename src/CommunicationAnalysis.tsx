@@ -12,25 +12,33 @@ export default function CommunicationAnalysis() {
   const analysis = useMemo(() => {
     const moonRadius = 1737.4;
     const height = Math.max(0, altitude);
+
+    // Geometric horizon distance from the Moon's surface
     const horizonDistance = Math.sqrt(
-      Math.pow(moonRadius + height, 2) - Math.pow(moonRadius, 2)
+      Math.pow(moonRadius + height, 2) -
+      Math.pow(moonRadius, 2)
     );
 
-    const distanceKm = horizonDistance / 1000;
-    const distanceMeters = Math.max(1000, horizonDistance);
+    const distanceKm = horizonDistance;
+    const distanceMeters = Math.max(1000, distanceKm * 1000);
 
-    const wavelength = 299792458 / (frequency * 1e9);
+    // Radio wavelength
+    const frequencyHz = frequency * 1e9;
+    const wavelength = 299792458 / frequencyHz;
+
+    // Free-space path loss
     const fspl =
       20 * Math.log10(distanceMeters) +
-      20 * Math.log10(frequency * 1e9) -
+      20 * Math.log10(frequencyHz) -
       147.55;
 
+    // Simplified received-power estimate
     const receivedPower =
-      10 * Math.log10(Math.max(0.001, transmitterPower)) +
+      10 * Math.log10(Math.max(0.001, transmitterPower * 1000)) +
       antennaGain -
       fspl;
 
-    const visibility =
+    const region =
       Math.abs(latitude) >= 80
         ? 'Polar region'
         : 'Non-polar region';
@@ -40,7 +48,7 @@ export default function CommunicationAnalysis() {
       wavelength,
       fspl,
       receivedPower,
-      visibility,
+      region,
     };
   }, [latitude, altitude, frequency, transmitterPower, antennaGain]);
 
@@ -53,28 +61,29 @@ export default function CommunicationAnalysis() {
 
   return (
     <div className="communication-page">
-      <div className="communication-header">
+      <header className="communication-header">
         <div>
           <div className="communication-eyebrow">
             MISSION INFRASTRUCTURE
           </div>
           <h1>Communication Analysis</h1>
           <p>
-            Estimate lunar surface-to-relay radio link conditions
-            for mission planning.
+            Explore estimated lunar surface-to-relay radio
+            communication conditions for mission planning.
           </p>
         </div>
+
         <div className="communication-status">
           <span className="status-dot" />
           SIMULATION
         </div>
-      </div>
+      </header>
 
       <div className="communication-grid">
         <section className="communication-panel">
           <h2>Mission Parameters</h2>
           <p className="panel-description">
-            Adjust the values to explore communication scenarios.
+            Adjust the mission parameters to explore different scenarios.
           </p>
 
           <label>
@@ -85,12 +94,13 @@ export default function CommunicationAnalysis() {
             type="range"
             min="-90"
             max="90"
+            step="1"
             value={latitude}
             onChange={(e) => setLatitude(Number(e.target.value))}
           />
 
           <label>
-            Spacecraft antenna height
+            Antenna height above surface
             <span>{altitude.toFixed(1)} km</span>
           </label>
           <input
@@ -123,10 +133,9 @@ export default function CommunicationAnalysis() {
             type="range"
             min="1"
             max="100"
+            step="1"
             value={transmitterPower}
-            onChange={(e) =>
-              setTransmitterPower(Number(e.target.value))
-            }
+            onChange={(e) => setTransmitterPower(Number(e.target.value))}
           />
 
           <label>
@@ -137,17 +146,16 @@ export default function CommunicationAnalysis() {
             type="range"
             min="0"
             max="30"
+            step="1"
             value={antennaGain}
-            onChange={(e) =>
-              setAntennaGain(Number(e.target.value))
-            }
+            onChange={(e) => setAntennaGain(Number(e.target.value))}
           />
         </section>
 
         <section className="communication-panel">
           <h2>Link Analysis</h2>
           <p className="panel-description">
-            Calculated estimates based on your selected parameters.
+            Live estimates based on the selected parameters.
           </p>
 
           <div className="communication-metric">
@@ -171,16 +179,16 @@ export default function CommunicationAnalysis() {
           </div>
 
           <div className="communication-metric">
-            <span>Region classification</span>
-            <strong>{analysis.visibility}</strong>
+            <span>Landing region</span>
+            <strong>{analysis.region}</strong>
           </div>
 
           <div className="communication-result">
             <span>SIMULATED LINK INDICATOR</span>
             <strong>{status}</strong>
             <p>
-              This is a simplified free-space link estimate,
-              not a verified operational communication link.
+              This simplified estimate is not a verified operational
+              communication link.
             </p>
           </div>
         </section>
@@ -190,16 +198,19 @@ export default function CommunicationAnalysis() {
         <h2>Mission Communication Notes</h2>
         <ul>
           <li>
-            Lunar surface communication may require an orbiting
-            relay spacecraft when Earth is below the local horizon.
+            Lunar surface missions may need an orbiting relay spacecraft
+            when Earth is below the local horizon.
           </li>
           <li>
-            Terrain, antenna orientation, relay orbit and
-            atmospheric or hardware losses can affect the link.
+            Terrain and surface elevation can obstruct radio line of sight.
           </li>
           <li>
-            Actual link validation requires relay position,
-            antenna patterns, receiver sensitivity and link margins.
+            Relay orbit, antenna orientation, receiver sensitivity and
+            hardware losses affect communication quality.
+          </li>
+          <li>
+            Polar landing sites may experience different Earth visibility
+            conditions depending on their location and local terrain.
           </li>
         </ul>
       </section>
